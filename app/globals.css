@@ -1,26 +1,280 @@
 @import "tailwindcss";
 
+/* Approved M3 brand values: centralized for the current baseline.
+   Warm Red is an accent, not a small-text color on white. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --brand-warm-red: #ff4e45;
+  --brand-outer-space: #11182f;
+  --brand-perfect-white: #ffffff;
+  --background: var(--brand-perfect-white);
+  --foreground: var(--brand-outer-space);
+  --primary: var(--brand-warm-red);
+  --primary-hover: #f0443c;
+  --primary-active: #ef4139;
+  --primary-foreground: var(--brand-outer-space);
+  --surface: var(--brand-perfect-white);
+  --surface-subtle: #f5f6f8;
+  --border: #dce0e7;
+  --border-strong: #7a8294;
+  --text-muted: #626b7d;
+  --text-secondary: #414b60;
+  --success: #216640;
+  --warning: #795000;
+  --error: #b52b25;
+  --link: var(--error);
+  --focus-ring: var(--brand-outer-space);
+  --selection-background: var(--brand-outer-space);
+  --selection-foreground: var(--brand-perfect-white);
+
+  /* Local fonts only; no licensed brand files are currently present. */
+  --font-brand: "Neue Haas Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-code: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --type-display: clamp(3rem, 1.8rem + 4vw, 5.75rem);
+  --type-h1: clamp(2.25rem, 1.5rem + 2.5vw, 4rem);
+  --type-h2: clamp(1.875rem, 1.4rem + 1.6vw, 3rem);
+  --type-h3: clamp(1.5rem, 1.2rem + 1vw, 2.125rem);
+  --type-h4: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
+  --type-body-large: clamp(1.125rem, 1.05rem + 0.25vw, 1.25rem);
+  --type-body: 1rem;
+  --type-body-small: 0.875rem;
+  --type-label: 0.875rem;
+  --type-eyebrow: 0.75rem;
+  --leading-display: 1.08;
+  --leading-heading: 1.2;
+  --leading-body: 1.65;
+  --leading-label: 1.4;
+  --tracking-heading: -0.025em;
+  --weight-heading: 600;
+  --tracking-eyebrow: 0.12em;
+  --measure-reading: 65ch;
+  --measure-heading: 24ch;
+
+  /* Quarter-rem rhythm, with fluid page-level spacing. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --container-max: 80rem;
+  --page-gutter: clamp(1rem, 0.5rem + 2vw, 3rem);
+  --section-space: clamp(3rem, 1.5rem + 5vw, 7rem);
+  --section-space-compact: clamp(2rem, 1rem + 3vw, 4rem);
+  --grid-gap: clamp(1rem, 0.75rem + 1vw, 2rem);
+  --grid-min: 17rem;
+
+  --radius-small: 0.25rem;
+  --radius-medium: 0.5rem;
+  --radius-large: 0.75rem;
+  --radius-pill: 999px;
+  --border-width: 1px;
+  --elevation-subtle: 0 2px 8px rgb(17 24 47 / 0.04);
+  --elevation-elevated: 0 8px 24px rgb(17 24 47 / 0.08);
+  --focus-width: 3px;
+  --focus-offset: 3px;
+  --control-min: 2.75rem;
+  --duration-fast: 120ms;
+  --duration-standard: 200ms;
+  --duration-slow: 320ms;
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* Tailwind v4 semantic utilities use the same source as global styles. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-muted: var(--text-muted);
+  --color-secondary: var(--text-secondary);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-focus-ring: var(--focus-ring);
+  --font-sans: var(--font-brand);
+  --font-mono: var(--font-code);
+  --spacing: var(--space-1);
+  --radius-sm: var(--radius-small);
+  --radius-md: var(--radius-medium);
+  --radius-lg: var(--radius-large);
+  --radius-full: var(--radius-pill);
+  --shadow-subtle: var(--elevation-subtle);
+  --shadow-elevated: var(--elevation-elevated);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html { scroll-padding-block-start: var(--space-6); }
+  body {
+    min-block-size: 100svh;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-brand);
+    font-size: var(--type-body);
+    line-height: var(--leading-body);
+    overflow-wrap: break-word;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--foreground);
+    -webkit-text-fill-color: currentColor;
+    text-shadow: none;
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-heading);
+    letter-spacing: var(--tracking-heading);
+    text-wrap: balance;
+  }
+  h1 { font-size: var(--type-h1); }
+  h2 { font-size: var(--type-h2); }
+  h3 { font-size: var(--type-h3); }
+  h4 { font-size: var(--type-h4); }
+  p { text-wrap: pretty; }
+  a {
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.2em;
+    transition: color var(--duration-fast) var(--easing-standard),
+      text-decoration-thickness var(--duration-fast) var(--easing-standard);
+  }
+  a:hover { color: var(--foreground); text-decoration-thickness: 0.15em; }
+  a:active { color: var(--text-secondary); }
+  button, input, select, textarea { font: inherit; }
+  button, [type="button"], [type="submit"], [type="reset"] {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  :disabled { cursor: not-allowed; }
+  :focus-visible {
+    outline: var(--focus-width) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+    box-shadow: 0 0 0 var(--focus-offset) var(--background);
+  }
+  ::selection { background: var(--selection-background); color: var(--selection-foreground); }
+}
+
+@layer components {
+  /* Nest a container inside a full-width section.
+     Override --grid-min on a grid for content with a different minimum. */
+  .page-container {
+    inline-size: min(calc(100% - 2 * var(--page-gutter)), var(--container-max));
+    margin-inline: auto;
+  }
+  .reading-container {
+    inline-size: min(calc(100% - 2 * var(--page-gutter)), var(--measure-reading));
+    margin-inline: auto;
+  }
+  .page-container .reading-container { inline-size: min(100%, var(--measure-reading)); }
+  .section { padding-block: var(--section-space); }
+  .section-compact { padding-block: var(--section-space-compact); }
+  .responsive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min)), 1fr));
+    gap: var(--grid-gap);
+  }
+  .responsive-grid > * { min-inline-size: 0; }
+  .stack > * + * { margin-block-start: var(--stack-gap, var(--space-6)); }
+  .type-display, .type-h1, .type-h2, .type-h3, .type-h4 {
+    max-inline-size: var(--measure-heading);
+    color: var(--foreground);
+    -webkit-text-fill-color: currentColor;
+    text-shadow: none;
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-heading);
+    letter-spacing: var(--tracking-heading);
+    text-wrap: balance;
+  }
+  .type-display { font-size: var(--type-display); line-height: var(--leading-display); }
+  .type-h1 { font-size: var(--type-h1); }
+  .type-h2 { font-size: var(--type-h2); }
+  .type-h3 { font-size: var(--type-h3); }
+  .type-h4 { font-size: var(--type-h4); }
+  .type-body-large, .type-body, .type-body-small { max-inline-size: var(--measure-reading); line-height: var(--leading-body); }
+  .type-body-large { font-size: var(--type-body-large); }
+  .type-body { font-size: var(--type-body); }
+  .type-body-small { font-size: var(--type-body-small); }
+  .type-label { font-size: var(--type-label); font-weight: 600; line-height: var(--leading-label); }
+  .type-eyebrow {
+    font-size: var(--type-eyebrow);
+    font-weight: 600;
+    line-height: var(--leading-label);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+  }
+  .surface {
+    background: var(--surface);
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-medium);
+    padding: var(--space-6);
+  }
+  .surface-subtle { background: var(--surface-subtle); }
+
+  /* CSS behavior only; final React Button API is deferred.
+     Use native disabled buttons rather than disabled anchors. */
+  .button-base {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-block-size: var(--control-min);
+    max-inline-size: 100%;
+    padding: var(--space-3) var(--space-5);
+    border: var(--border-width) solid var(--border-strong);
+    border-radius: var(--radius-small);
+    background: var(--surface);
+    color: var(--foreground);
+    font-size: var(--type-label);
+    font-weight: 600;
+    line-height: var(--leading-label);
+    text-align: center;
+    text-decoration: none;
+    transition: background-color var(--duration-fast) var(--easing-standard),
+      border-color var(--duration-fast) var(--easing-standard);
+  }
+  .button-base:not(:disabled):hover { background: var(--surface-subtle); border-color: var(--foreground); text-decoration: underline; }
+  .button-base:not(:disabled):active { border-color: var(--foreground); box-shadow: inset 0 0 0 1px var(--foreground); }
+  .button-primary { background: var(--primary); border-color: var(--foreground); color: var(--primary-foreground); }
+  .button-primary:not(:disabled):hover { background: var(--primary-hover); }
+  .button-primary:not(:disabled):active { background: var(--primary-active); }
+  .button-base:disabled {
+    background: var(--surface-subtle);
+    color: var(--text-muted);
+    border-color: var(--border);
+    border-style: dashed;
+  }
+  /* Keep keyboard focus above component shadows, including pressed controls. */
+  .button-base:focus-visible {
+    outline: var(--focus-width) solid var(--focus-ring);
+    outline-offset: var(--focus-offset);
+    box-shadow: 0 0 0 var(--focus-offset) var(--background);
+  }
+  .skip-link { position: fixed; inset-block-start: var(--space-4); inset-inline-start: var(--space-4); z-index: 50; transform: translateY(calc(-100% - var(--space-8))); }
+  .skip-link:focus { transform: translateY(0); }
+}
+
+/* Covers future utility animations, pseudo-elements, and anchor scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --duration-fast: 0ms; --duration-standard: 0ms; --duration-slow: 0ms; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (forced-colors: active) {
+  :focus-visible { outline-color: Highlight; }
 }

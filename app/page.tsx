@@ -1,69 +1,140 @@
-import Image from "next/image";
+import type { Metadata } from "next";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: "Design System Foundation",
+  description: "Temporary internal preview of the Swift Market LLC design foundation.",
+  robots: { index: false, follow: false },
+};
+
+const brandColors = [
+  { name: "Warm Red", value: "#FF4E45", style: "bg-primary text-primary-foreground" },
+  { name: "Outer Space", value: "#11182F", style: "bg-foreground text-background" },
+  { name: "Perfect White", value: "#FFFFFF", style: "bg-surface text-foreground" },
+] as const;
+
+const typeSamples = [
+  { label: "Display", className: "type-display", sample: "Clear by design." },
+  { label: "H1", className: "type-h1", sample: "A confident foundation." },
+  { label: "H2", className: "type-h2", sample: "Room for ideas." },
+  { label: "H3", className: "type-h3", sample: "Balance and hierarchy." },
+  { label: "H4", className: "type-h4", sample: "Details with purpose." },
+  { label: "Body large", className: "type-body-large", sample: "Fluid type and generous spacing keep content comfortable to read." },
+  { label: "Body", className: "type-body", sample: "The default reading size uses a restrained line length and a relaxed line height." },
+  { label: "Body small", className: "type-body-small", sample: "Supporting information remains legible at smaller sizes." },
+  { label: "Label", className: "type-label", sample: "A clear label" },
+  { label: "Eyebrow", className: "type-eyebrow", sample: "A small introduction" },
+] as const;
+
+export default function DesignSystemPreview() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main id="main-content" tabIndex={-1}>
+      <div className="section page-container stack">
+        <p className="type-eyebrow text-secondary">M3 / Internal preview</p>
+        <h1 className="type-h1">Swift Market LLC — Design System Foundation</h1>
+        <p className="type-body-large text-secondary">
+          Temporary reference for future pages. Approved brand tokens, reusable
+          typography, and layout primitives. This is not the final homepage.
+        </p>
+        <p className="type-body-small text-muted">
+          Neue Haas Grotesk is used only when legally available locally. No font
+          files are bundled or downloaded; otherwise the system fallback stack applies.
+        </p>
+        <a href="#interactions">Jump to interaction samples</a>
+      </div>
+
+      <section className="section-compact" aria-labelledby="palette-heading">
+        <div className="page-container stack">
+          <h2 id="palette-heading">01 / Color and surfaces</h2>
+          <div className="responsive-grid">
+            {brandColors.map((color) => (
+              <figure key={color.name}>
+                <div
+                  className={`h-20 rounded-sm border border-border ${color.style}`}
+                  aria-hidden="true"
+                />
+                <figcaption className="pt-4">
+                  <h3 className="type-h4">{color.name}</h3>
+                  <p className="font-mono type-body-small text-secondary">{color.value}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          <div className="responsive-grid">
+            <div className="surface stack shadow-subtle">
+              <h3 className="type-h4">Surface / subtle shadow</h3>
+              <p className="text-secondary">Secondary text supports the hierarchy.</p>
+              <p className="type-body-small text-muted">Muted text remains readable.</p>
+            </div>
+            <div className="surface surface-subtle stack shadow-elevated">
+              <h3 className="type-h4">Subtle surface / elevated shadow</h3>
+              <p className="text-success">Success — example status</p>
+              <p className="text-warning">Warning — example status</p>
+              <p className="text-error">Error — example status</p>
+            </div>
+          </div>
+          <p className="type-body-small text-secondary">
+            Warm Red uses navy text. Text links and error messages use a darker
+            red for contrast. Status labels communicate meaning alongside color.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="section page-container stack" aria-labelledby="type-heading">
+        <h2 id="type-heading">02 / Typography</h2>
+        <div className="stack">
+          {typeSamples.map((sample) => (
+            <div key={sample.label} className="border-t border-border pt-6">
+              <p className="type-label text-muted mb-3">{sample.label}</p>
+              <p className={sample.className}>{sample.sample}</p>
+            </div>
+          ))}
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="section-compact bg-surface-subtle" aria-labelledby="layout-heading">
+        <div className="page-container stack">
+          <h2 id="layout-heading">03 / Layout and rhythm</h2>
+          <p className="type-body text-secondary">
+            This full-width section contains an 80rem (1280px) maximum page
+            container with fluid gutters. Standard and compact sections share a
+            fluid spacing system.
+          </p>
+          <div className="reading-container stack">
+            <h3 className="type-h4">Narrow reading container / 65ch</h3>
+            <p>Reading content stays centered and comfortably constrained while the surrounding page can use a wider grid.</p>
+          </div>
+          <div className="responsive-grid">
+            {[
+              { label: "Small / 0.5rem", spacing: "p-2" },
+              { label: "Medium / 1.5rem", spacing: "p-6" },
+              { label: "Large / 3rem", spacing: "p-12" },
+            ].map((sample) => (
+              <div key={sample.label} className={`border-t border-border ${sample.spacing}`}>
+                <p className="type-label">{sample.label}</p>
+                <p className="type-body-small text-secondary">Inset spacing sample</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="interactions" className="section page-container stack" aria-labelledby="interaction-heading">
+        <h2 id="interaction-heading">04 / Interaction basics</h2>
+        <p className="type-body text-secondary">
+          Use Tab to inspect focus rings. Hover or press the sample links to
+          inspect state changes. Select text to inspect the selection colors.
+        </p>
+        <a href="#palette-heading">Text link — return to the palette</a>
+        <div className="flex flex-wrap items-center gap-4">
+          <a href="#type-heading" className="button-base button-primary">Primary style — view type</a>
+          <a href="#layout-heading" className="button-base">Neutral style — view layout</a>
+          <button type="button" className="button-base button-primary" disabled>Disabled sample</button>
+        </div>
+        <p className="type-body-small text-muted">
+          These are CSS foundation samples. Final Button components, site
+          navigation, services, packages, and footer are deferred.
+        </p>
+      </section>
+    </main>
   );
 }

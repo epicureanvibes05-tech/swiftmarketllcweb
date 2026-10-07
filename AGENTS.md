@@ -14,7 +14,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 These rules apply throughout this repository. Follow the user's current authorized scope and preserve unrelated work. Inspect the repository and relevant installed Next.js documentation before implementation; do not assume APIs or conventions from older versions. Keep the managed Next.js block above intact. `CLAUDE.md` delegates to this file.
 
-For the initial foundation task, edit only this root `AGENTS.md`: do not change application code or configuration, install packages, or build website sections. The standards below govern subsequent authorized implementation; they do not authorize building the website now.
+For Step 0.5 synchronization, edit only this root `AGENTS.md`. Do not change application code, CSS, TSX, configuration, README, package manifests, lockfiles, or any other file; do not create files or install/update/remove packages. Do not stage, commit, push, restore, reset, or discard anything. Preserve the managed Next.js block exactly and preserve unrelated rules and uncommitted M3 work. The standards below govern subsequent authorized implementation; they do not authorize implementing later milestones now.
 
 ## Inspected repository baseline
 
@@ -34,20 +34,26 @@ At the foundation review, the repository is a create-next-app starter on `main`,
 - `pnpm-lock.yaml` contains two YAML documents: package-manager tooling first and application dependencies second. Account for both during future dependency/reproducibility checks; do not rewrite it as part of this documentation task.
 - `node_modules/` and `.next/` are installed/generated artifacts, not application source. Bundled Next.js project-structure, Server/Client Component, and CSS guides were consulted, and the agent-file generator was inspected to verify managed-block behavior.
 
+## Current approved baseline and milestone status
+
+MVP Requirements v3.0 are approved. The historical starter snapshot above records the initial inspection only; it does not supersede the current approved business, design, and delivery baseline below.
+
+- M0 environment/setup, M1 Git/GitHub foundation, and M2 Next.js foundation are complete.
+- M3 design-system foundation is implemented and awaiting the final Step 0 checkpoint. Existing changes in `app/globals.css`, `app/layout.tsx`, and `app/page.tsx` are uncommitted and must be preserved.
+- Step 0 audit/synchronization is in progress. Do not describe the checkpoint or repository freeze as completed until verified and authorized.
+- M3 uses approved centralized brand tokens, fluid typography, spacing, responsive containers/grids, visible focus states, reduced-motion handling, and the approved system fallback font stack. Google/Geist font loading and the starter automatic dark theme are no longer the active implementation.
+- `app/layout.tsx` provides Swift Market metadata, `en-US`, light color scheme, and a skip link. `app/page.tsx` is an **internal temporary design-system preview**, not the production homepage; preserve its `noindex` until replaced by the production homepage.
+- Lint and production build previously passed. Rendered visual/accessibility QA remains outstanding; do not claim it passed from source checks alone.
+
 ## Business and conversions
 
-Swift Market LLC is a consultancy serving the United States market across digital growth, marketing, creative, web, app, and technology work. Use professional U.S. English and clear, helpful, conversion-focused copy.
+Swift Market LLC is building a U.S.-market consultancy/services website covering digital growth, marketing, creative, web/app development, AI/automation, and technology solutions. Use professional U.S. English and clear, helpful, conversion-focused copy.
 
-The service catalog must support:
+The primary MVP goal is a professional lead-generation, consultation, enquiry, and proposal-request platform. The conversion contract is:
 
-- Recurring marketing packages and individual marketing services.
-- Website design and development; app design and development.
-- Branding and creative services.
-- SEO, Local SEO, and Google Business Profile management.
-- Paid advertising management and social media management.
-- Content and video production.
-- Automation and custom technology solutions.
-- Enterprise/custom consulting.
+Visitor discovers a service, industry, or package -> evaluates an appropriate solution -> selects or references a package/service -> submits a consultation/enquiry/proposal request -> Swift Market receives and manages the lead -> proposal and onboarding happen operationally.
+
+The MVP is enquiry/proposal-first, not ecommerce-first. Do not implement online checkout or payment unless explicitly approved later.
 
 Primary conversion paths are **Explore Services**, **Compare Packages**, **Request a Consultation**, **Request a Proposal**, and **Send a Project Brief**. Use clear CTA labels, destinations, and relevant next steps. Do not publish dead controls or claim a submission was received without a functioning backend.
 
@@ -55,21 +61,71 @@ Package structure:
 
 | Business segment | Tiers |
 | --- | --- |
-| Startup | Basic, Standard, Premium |
+| Startup Business | Basic, Standard, Premium |
 | Growing Business | Basic, Standard, Premium |
-| Enterprise | Custom consultation |
+| Enterprise | Consultation-led custom Build Your Growth Stack; custom proposal/quote |
 
-Model segment and tier separately in typed data. Keep inclusions, exclusions, scope, billing cadence, and verified pricing consistent across cards, comparison tables, pages, and inquiry forms. Do not invent prices, deliverables, contractual terms, or guarantees. Advertising/media spend must always be described separately from Swift Market's management/service fees, including in package comparisons and proposals.
+The commercial structure also supports Individual Services, One-Time Projects, and Add-ons. Enterprise requirements/services are selected according to the client and support consultation and custom proposal creation; do not force enterprise users into one fixed predefined package.
+
+Model segment and tier separately in typed data. Keep inclusions, exclusions, scope, billing cadence, and verified pricing consistent across cards, comparison tables, pages, and enquiry forms. Advertising/media spend is separate from management/service fees unless explicitly stated otherwise in an approved offer. Third-party paid tools, software subscriptions, hosting, premium assets, production costs, and other external costs are separate unless explicitly included in an approved offer. State these distinctions consistently in packages, comparisons, and proposals.
+
+Never invent prices, setup fees, post quantities, campaign quantities, ad budgets, service limits, contract durations, turnaround times, guarantees, discounts, performance claims, deliverables, or contractual terms. Use **TBF / To Be Finalized / Custom Quote** where appropriate until approved data exists. Represent unknowns explicitly rather than filling them with fabricated defaults.
+
+## Service and industry architecture
+
+The centralized service architecture must be capable of supporting these families; this list does not authorize implementing every family immediately:
+
+- Strategy & Consulting.
+- SEO.
+- Local SEO / Google Business Profile.
+- AI Search / AEO / GEO.
+- Authority / Digital PR.
+- Paid Advertising / PPC.
+- Platform-specific advertising.
+- Social Media Management.
+- Content Marketing.
+- Branding & Graphic Design.
+- Video / Creative Production.
+- Website Design & Development.
+- App / MVP Design & Development.
+- Website Care / Maintenance.
+- CRO.
+- Email / SMS Marketing.
+- CRM & Marketing Automation.
+- AI Automation.
+- B2B Marketing / Lead Generation.
+- Analytics / Tracking / Reporting.
+- Business Integrations.
+- Enterprise Marketing / Growth Leadership.
+
+Advertising/social channels may include Google, Meta, TikTok, YouTube, Snapchat, Spotify, and other approved channels according to client requirements. Do not treat channel names as evidence of partnerships, certifications, approved integrations, or inclusion in every offer.
+
+Support scalable industry/niche targeting through shared architecture and centralized content/data, without duplicating the entire site. Priority/representative sectors are Healthcare; Real Estate; Home Services; E-commerce; SaaS / AI / Technology; Restaurants / Franchises; Legal; Education; Finance; Automotive; and B2B / Professional Services. Additional industries may be added through the centralized sources. An e-commerce client industry does not change this website's enquiry-first conversion model.
+
+## Content, route intent, and data contracts
+
+Production architecture is expected to support Home; About; Services and service detail; Plans / Packages, package detail, and package comparison; Enterprise; Industries and industry detail; Case Studies / Portfolio; Insights / Blog; Contact / Consultation / Proposal request; and Legal pages. Final route names and implementation belong to M4+ architecture decisions; do not fabricate business facts or legal policies to fill routes.
+
+Services, packages, industries, deliverables, availability, add-ons, FAQs, and related commercial content must eventually use centralized typed data/content sources instead of duplicated hard-coded copies. Package/data models must support:
+
+- Unique identifiers, segment/tier, and linked services.
+- Deliverables, approved measurable quantities/frequency, and scope limits.
+- Pricing/billing basis, setup fee where applicable, and external costs.
+- Timeline where approved, reporting/support, and client responsibilities.
+- Exclusions, add-ons, availability/status, and approved terms.
+- TBF/custom values without fabricated defaults.
+
+Build these models within the authorized architecture milestone. Preserve unknown values and the distinction between recurring packages, individual services, one-time projects, add-ons, and custom enterprise requirements.
 
 ## Brand and design system
 
-Light mode is the primary website experience. Do not let the starter's automatic dark mode dictate the brand direction. Dark contrast sections may support the design; an optional full dark theme must be intentionally scoped and checked.
+Light mode is the approved initial website mode. Dark contrast sections may support the design; an optional full dark theme requires intentional scope and verification.
 
-Core color roles are Warm Red for the primary energetic accent, Outer Space/deep navy for primary text and dark contrast, and Perfect White for the primary canvas. Final brand HEX values have not been confirmed: never guess or present provisional values as approved. Centralize semantic color tokens so approval can update the whole site. If implementation needs interim colors, clearly document their provisional status and validate contrast.
+Approved core colors are **Warm Red #FF4E45**, **Outer Space #11182F**, and **Perfect White #FFFFFF**. Warm Red is primarily an energetic accent/action color, Outer Space/deep navy carries primary text and dark contrast, and Perfect White is the primary canvas. Keep these values centralized in semantic tokens; do not scatter hard-coded colors across components. Warm Red must not be assumed safe for arbitrary small text on white. Validate supporting colors and every relevant text/control state for contrast.
 
 Centralize typography, spacing, container widths, grid gaps, radii, borders, focus styles, and motion tokens. Use semantic CSS variables and the existing Tailwind v4 CSS-first integration. Avoid scattering literal brand colors across components.
 
-Primary brand typeface: Neue Haas Grotesk. Do not download, bundle, or substitute unauthorized font files. If licensed files are absent, use a safe system fallback stack such as `"Helvetica Neue", Helvetica, Arial, sans-serif`; naming a font does not grant permission to distribute it. When verified licensed files are supplied, load them using the installed Next.js font guidance and retain fallbacks. Starter Geist imports are existing behavior, not approved brand typography.
+Preferred brand typeface: Neue Haas Grotesk only when legally/licensably available to the project. Do not download, bundle, redistribute, or fabricate font files. Until approved font assets are available, preserve the approved fallback stack: `"Neue Haas Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif`. Naming a locally available font does not grant redistribution rights. Any future approved asset integration must follow its license and installed Next.js guidance; retain fallbacks.
 
 The site must feel premium, modern, energetic, balanced, aligned, breathable, professional, trustworthy, and conversion focused. Establish visual hierarchy through typography, whitespace, alignment, and restrained accent use. Avoid a generic agency-template appearance and do not fill every region with cards.
 
@@ -95,6 +151,8 @@ Use the existing `@/*` alias consistently. Keep shared service and package defin
 Maintain strict TypeScript. Use explicit domain models, component props, integration boundaries, and validation result types; allow useful local inference. Avoid `any` unless technically unavoidable and documented. Treat external input as `unknown` and narrow or validate it before use. Do not silence compiler or lint errors to make checks pass.
 
 Prefer simple, readable, maintainable code with focused responsibilities. Avoid duplicated markup, clever abstractions, speculative configuration, and dependencies for features easily implemented with the platform or CSS.
+
+Prioritize progressive enhancement and clear conversion UX alongside semantic HTML, accessibility, mobile-first responsiveness, performance/Core Web Vitals, technical SEO, maintainability, security, balanced layout, purposeful restrained motion, and verified claims. Do not add heavy libraries merely for visual effects.
 
 ## Responsive layout
 
@@ -133,7 +191,7 @@ Use Next.js metadata APIs. Every indexable page must have a unique title, unique
 
 Keep the verified production origin centralized for canonical and social URLs; do not invent a domain or deploy with localhost canonicals. Architecture must support `app/sitemap.ts`, `app/robots.ts`, service pages, industry pages, case studies, insights/articles, and breadcrumbs. Include only intended public canonical pages in sitemaps. Keep drafts and unverified placeholders out of production indexing; do not use robots directives as security controls.
 
-Structured data must match visible, verified content. Never fabricate reviews, ratings, locations, or organization credentials. Avoid keyword stuffing, doorway pages, fake locations, hidden text, and fabricated schema. Industry/location content must provide distinct verified value rather than duplicated keyword pages.
+Structured data must match visible, verified content. Never fabricate canonical production origins, structured business facts, reviews, ratings, case-study metrics, client logos, awards, addresses, phone numbers, social URLs, locations, or organization credentials. SEO implementation must use verified business information. Avoid keyword stuffing, doorway pages, fake locations, hidden text, and fabricated schema. Industry/location content must provide distinct verified value rather than duplicated keyword pages.
 
 Never invent clients, reviews, testimonials, awards, certifications, partnerships, revenue, rankings, case-study metrics, years of experience, team members, or office locations. Do not publish fake client logos or certification badges. Use clearly marked placeholders when verified content is unavailable, track what needs confirmation, and resolve or omit placeholders before launch. Do not turn performance goals or hypothetical examples into claims of achieved results.
 
@@ -141,13 +199,15 @@ Never invent clients, reviews, testimonials, awards, certifications, partnership
 
 Lead forms must eventually support server-side validation, accessible validation messages, spam protection, rate limiting, UTM attribution, landing-page attribution, email routing, success/error states, and a thank-you flow. Implement these as part of the authorized lead-system scope rather than pretending a prototype is production ready.
 
+Future lead handling follows the enquiry/proposal-first operational workflow: **New -> Contacted -> Proposal Sent -> Won / Lost**. Assignment and internal notes may be added in the relevant milestone. Enterprise enquiries must preserve selected requirements/services for consultation and custom proposal creation. Do not invent providers, credentials, routing addresses, or integrations.
+
 Validate field types, lengths, formats, and allowed values on the server; client validation is a usability aid. Treat attribution fields as untrusted input. Preserve useful entries after errors, prevent accidental duplicate submissions, and report success only after the intended delivery/persistence succeeds. Keep service/package selections consistent with shared data.
 
 Use appropriate server-side spam/rate controls and minimize collection and logging of personal data. Route inquiries through configured server integrations. Never expose API keys, email credentials, or privileged configuration in client code or browser-visible environment variables. Document required environment-variable names without real values.
 
 ## Security
 
-Never commit secrets or print them in logs, diffs, documentation, or tool output. Use environment variables, server-side validation, and least-privilege integration access. Keep server secrets outside `NEXT_PUBLIC_*` variables and props sent to Client Components.
+Never commit secrets or print them in logs, diffs, documentation, or tool output. Use environment variables, server-side validation, and least-privilege integration access. Never expose secrets through `NEXT_PUBLIC_*` variables or props sent to Client Components. Future provider/API/email credentials must remain server-only. Public forms require server-side validation, spam protection, abuse/rate-limit controls, and safe error handling before production use; do not invent providers or credentials.
 
 Avoid unsafe HTML and untrusted `dangerouslySetInnerHTML`; validate and safely encode structured data and any content requiring HTML serialization. Review external URLs and dependencies for their concrete use. Do not introduce packages without a clear need or change build-script permissions casually. Preserve existing secret ignores and do not edit generated files by hand.
 
@@ -161,6 +221,8 @@ Before implementing a requested feature:
 4. Reuse existing components, tokens, and verified content/data.
 5. Preserve working behavior and unrelated changes.
 
+For every milestone, implement only approved scope, run appropriate lint/type/build/tests, inspect the diff, and report changed files and actual validation. Do not commit or push unless explicitly authorized.
+
 After meaningful application implementation:
 
 1. Run `pnpm lint` and `pnpm build` using the installed tooling.
@@ -173,19 +235,20 @@ For documentation-only work, verify content, the managed block, whitespace, and 
 
 Do not perform destructive Git operations, force push, overwrite unrelated work, or delete working functionality without an explicit reason. Commit, publish, or deploy only within the user's authorized scope.
 
-## Four-day MVP priorities
+## Planned delivery sequence
 
-Work in this order, keeping future enhancements from blocking launch:
+The approved sequence supersedes the earlier general four-day checklist. Keep future enhancements from blocking MVP launch and do not implement a later milestone merely because its requirements are documented here.
 
-1. Stable foundation.
-2. Design system.
-3. Navigation and footer.
-4. Homepage.
-5. Packages.
-6. Highest-value service pages.
-7. Inquiry/lead system.
-8. Technical SEO.
-9. Responsive QA.
-10. Performance verification and production launch.
+| Stage | Scope |
+| --- | --- |
+| Step 0 | Repository synchronization/freeze |
+| M4 | Architecture and centralized data |
+| M5 | Core conversion UX / production homepage |
+| M6 | Services and packages |
+| M7 | Industries and authority content |
+| M8 | Enterprise, lead operations, enquiry system, chatbot as approved |
+| M9 | SEO, analytics, security/privacy integration |
+| M10 | QA, performance, deployment |
+| M11 | Operational launch |
 
-Keep the MVP focused on verified content and working conversion paths. Before launch, replace starter identity/metadata, resolve approved brand tokens and font rights, confirm production configuration, verify inquiry delivery, and complete appropriate accessibility, responsive, SEO, and performance checks. Deferred enhancements must not become speculative launch dependencies.
+Keep the MVP focused on verified content and working conversion paths. Before launch, replace starter identity/metadata and the internal preview, preserve approved brand tokens and verify font rights, confirm production configuration, verify enquiry delivery, and complete appropriate accessibility, responsive, SEO, and performance checks. Deferred enhancements must not become speculative launch dependencies.

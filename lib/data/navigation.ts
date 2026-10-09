@@ -1,11 +1,12 @@
 import type {
   CanonicalPath, CTA, ConversionCTA, NavigationGroup, NavigationItem,
-  PackageSelection, RouteDefinition, RouteId, ServiceId,
+  PackageSelection, RouteDefinition, RouteId, ServiceId, Slug,
 } from "@/lib/domain";
 import { packageCatalog } from "@/lib/data/packages";
 import { relationshipRegistry } from "@/lib/data/relationships";
 import type { RelationshipRegistry } from "@/lib/data/relationships";
 import { getRouteById, getPublicRouteById, isPublicCTAContext, routes, validateCTAReferences } from "@/lib/data/routes";
+import type { RouteFragmentValidator } from "@/lib/data/routes";
 
 /** Architecture CTA candidates only. No CTA becomes a working public link by declaration. */
 export const consultationCTA = Object.freeze({ kind: "enquiry-link", intent: "request-consultation", label: "Request a Consultation", destination: Object.freeze({ routeId: "route:consultation" }) } as const satisfies ConversionCTA);
@@ -54,7 +55,7 @@ export const packageNavigation: NavigationItem = Object.freeze({
 });
 
 export type NavigationIssue = Readonly<{ code: "duplicate-id" | "cycle" | "missing-route" | "unverified-fragment"; id: string }>;
-export function validateNavigation(groups = navigationGroups, source = routes): readonly NavigationIssue[] {
+export function validateNavigation(groups = navigationGroups, source = routes, fragmentExists?: RouteFragmentValidator): readonly NavigationIssue[] {
   const issues: NavigationIssue[] = [], ids = new Set<string>();
   const report = (code: NavigationIssue["code"], id: string) => issues.push(Object.freeze({ code, id }));
   const walk = (node: NavigationItem, ancestors: Set<NavigationItem>) => {
@@ -62,7 +63,7 @@ export function validateNavigation(groups = navigationGroups, source = routes): 
     if (ids.has(node.id)) report("duplicate-id", node.id);
     ids.add(node.id);
     if (!getRouteById(node.routeId, source)) report("missing-route", node.id);
-    if (node.kind === "link" && node.fragment) report("unverified-fragment", node.id);
+    if (node.kind === "link" && node.fragment && !fragmentExists?.(node.routeId, node.fragment)) report("unverified-fragment", node.id);
     if (node.kind === "disclosure") {
       const next = new Set(ancestors); next.add(node);
       node.children.forEach((child) => walk(child, next));
@@ -76,10 +77,11 @@ export function validateNavigation(groups = navigationGroups, source = routes): 
   return Object.freeze(issues);
 }
 
-export function filterPublicNavigation(groups = navigationGroups, source = routes, data = relationshipRegistry): readonly NavigationGroup[] {
-  if (validateNavigation(groups, source).length) return Object.freeze([]);
+/** Route-only compatibility helper; public consumers supply the content gate via public-consumers. */
+export function filterPublicNavigation(groups = navigationGroups, source = routes, data = relationshipRegistry, fragmentExists?: RouteFragmentValidator, contentEligible?: (id: RouteId) => boolean): readonly NavigationGroup[] {
+  if (validateNavigation(groups, source, fragmentExists).length) return Object.freeze([]);
   const filter = (node: NavigationItem): NavigationItem | undefined => {
-    if (!getPublicRouteById(node.routeId, source, data)) return undefined;
+    if (!getPublicRouteById(node.routeId, source, data, fragmentExists) || (contentEligible && !contentEligible(node.routeId))) return undefined;
     if (node.kind === "link") return node;
     const children = node.children.map(filter).filter((child): child is NavigationItem => !!child);
     return children.length ? Object.freeze({ ...node, children: Object.freeze(children) })
@@ -90,11 +92,13 @@ export function filterPublicNavigation(groups = navigationGroups, source = route
   })).filter((candidate) => candidate.items.length));
 }
 
-export type ResolvedCTALink = Readonly<{ cta: CTA; path: CanonicalPath }>;
-/** Submit actions and unverified fragments/external targets cannot resolve as links. */
-export function resolvePublicCTA(cta: CTA, source: readonly RouteDefinition[] = routes, data: RelationshipRegistry = relationshipRegistry): ResolvedCTALink | undefined {
-  if (cta.kind === "submit-enquiry" || (cta.kind === "navigation" && cta.destination.fragment)
+export type ResolvedCTALink = Readonly<{ cta: CTA; path: CanonicalPath; fragment?: Slug }>;
+/** Route-only building block. Public application code uses the public-consumers entry point. */
+export function resolvePublicCTA(cta: CTA, source: readonly RouteDefinition[] = routes, data: RelationshipRegistry = relationshipRegistry, fragmentExists?: RouteFragmentValidator): ResolvedCTALink | undefined {
+  if (cta.kind === "submit-enquiry" || (cta.kind === "navigation" && cta.destination.fragment && !fragmentExists?.(cta.destination.routeId, cta.destination.fragment))
     || validateCTAReferences(cta, source, data).length || !isPublicCTAContext(cta, data)) return undefined;
-  const target = getPublicRouteById(cta.destination.routeId, source, data);
-  return target ? Object.freeze({ cta, path: target.path }) : undefined;
+  const target = getPublicRouteById(cta.destination.routeId, source, data, fragmentExists);
+  return target ? Object.freeze({ cta, path: target.path,
+    ...(cta.kind === "navigation" && cta.destination.fragment ? { fragment: cta.destination.fragment } : {}),
+  }) : undefined;
 }

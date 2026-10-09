@@ -1,6 +1,6 @@
 import type {
   CanonicalPath, ContentId, ContentRecord, CTA, Decision, EvidenceVerification,
-  Proof, ProofId, RouteDefinition, RouteId, RouteType, Slug,
+  Proof, ProofId, RouteDefinition, RouteId, RouteType, SelectionContext, Slug,
 } from "@/lib/domain";
 import { parseSlug } from "@/lib/domain/helpers";
 import { relationshipRegistry } from "@/lib/data/relationships";
@@ -10,6 +10,8 @@ import {
   validateCTAReferences, validateRouteRegistry,
 } from "@/lib/data/routes";
 import { resolvePublicCTA } from "@/lib/data/navigation";
+import type { ResolvedCTALink } from "@/lib/data/navigation";
+import type { RouteFragmentValidator } from "@/lib/data/routes";
 
 export type SectionRole = "overview" | "scope" | "sector-context" | "enquiry" | "legal" | "evidence";
 export type EvidenceClaim = Readonly<{
@@ -86,7 +88,32 @@ function proofReady(proof: Proof): boolean {
     && !!proof.publication.publishedAt.trim() && verified(proof.verification)
     && textReady(proof.title) && textReady(proof.content);
 }
-function inspectContent(record: PageContent, source: readonly RouteDefinition[], evidence: readonly Proof[], data: RelationshipRegistry, complete: boolean): readonly ContentIssue[] {
+function sameIds(a: readonly string[] = [], b: readonly string[] = []): boolean {
+  const sorted = [...b].sort();
+  return a.length === b.length && [...a].sort().every((id, index) => id === sorted[index]);
+}
+function sameSelection(a: SelectionContext = {}, b: SelectionContext = {}): boolean {
+  return a.familyId === b.familyId && a.industryId === b.industryId && a.projectId === b.projectId
+    && a.enterprise === b.enterprise && a.package?.packageId === b.package?.packageId
+    && a.package?.segment === b.package?.segment && a.package?.tier === b.package?.tier
+    && sameIds(a.serviceIds, b.serviceIds) && sameIds(a.addOnIds, b.addOnIds);
+}
+/** Exhaustive current CTA semantics. Tracking fields are not part of this contract. */
+export function areCTAsEquivalent(a: CTA, b: CTA): boolean {
+  if (a.kind !== b.kind || a.intent !== b.intent || a.label !== b.label) return false;
+  if (a.kind === "submit-enquiry") return b.kind === "submit-enquiry";
+  if (b.kind === "submit-enquiry" || a.destination.routeId !== b.destination.routeId) return false;
+  if (a.kind === "navigation") return b.kind === "navigation" && a.destination.fragment === b.destination.fragment;
+  return b.kind === "enquiry-link" && a.approvedOfferId === b.approvedOfferId && sameSelection(a.context, b.context);
+}
+function contentFragments(source: readonly PageContent[]): RouteFragmentValidator {
+  return (routeId, fragment) => {
+    const record = getContentByRouteId(routeId, source);
+    return parseSlug(fragment) !== null && !!record && decided(record.sections)
+      && record.sections.value.some((section) => section.id === fragment);
+  };
+}
+function inspectContent(record: PageContent, source: readonly RouteDefinition[], evidence: readonly Proof[], data: RelationshipRegistry, complete: boolean, fragmentExists: RouteFragmentValidator): readonly ContentIssue[] {
   const issues: ContentIssue[] = [];
   const report = (code: ContentIssue["code"], field: string) => issues.push(Object.freeze({ code, contentId: record.id, field }));
   const route = getRouteById(record.routeId, source);
@@ -97,8 +124,8 @@ function inspectContent(record: PageContent, source: readonly RouteDefinition[],
     parentId: null, path: "/", slug: null, relatedEntities: record.relatedEntities, entity: undefined }], data).some((i) => i.code === "invalid-entity")) report("invalid-reference", "relatedEntities");
   const checkCTA = (cta: CTA, field: string) => {
     if (!cta.label.trim() || validateCTAReferences(cta, source, data).length
-      || (cta.kind === "navigation" && cta.destination.fragment)) report("invalid-cta", field);
-    if (complete && cta.kind !== "submit-enquiry" && !resolvePublicCTA(cta, source, data)) report("route-not-ready", field);
+      || (cta.kind === "navigation" && cta.destination.fragment && !fragmentExists(cta.destination.routeId, cta.destination.fragment))) report("invalid-cta", field);
+    if (complete && cta.kind !== "submit-enquiry" && !resolvePublicCTA(cta, source, data, fragmentExists)) report("route-not-ready", field);
     if (cta.kind === "submit-enquiry" && (!decided(record.operationalReview) || record.operationalReview.value !== true)) report("missing-approval", "operationalReview");
   };
   const checkProofIds = (ids: readonly ProofId[], field: string) => {
@@ -112,7 +139,7 @@ function inspectContent(record: PageContent, source: readonly RouteDefinition[],
   checkProofIds(record.proofIds, "proofIds");
   if (record.cta.state === "approved") checkCTA(record.cta.value, "cta");
   if (route?.primaryCTA.state === "approved" && record.cta.state === "approved"
-    && JSON.stringify(route.primaryCTA.value) !== JSON.stringify(record.cta.value)) report("invalid-cta", "route.primaryCTA");
+    && !areCTAsEquivalent(route.primaryCTA.value, record.cta.value)) report("invalid-cta", "route.primaryCTA");
   if (record.sections.state === "approved") {
     const ids = new Set<string>();
     for (const section of record.sections.value) {
@@ -135,20 +162,22 @@ function inspectContent(record: PageContent, source: readonly RouteDefinition[],
     if (route.type === "legal" && (!decided(record.legalReview) || record.legalReview.value !== true)) report("missing-approval", "legalReview");
     if (route.type === "conversion" && (!decided(record.operationalReview) || record.operationalReview.value !== true)) report("missing-approval", "operationalReview");
     if (!textReady(route.metadata.title) || !textReady(route.metadata.description) || !decided(route.indexability)) report("missing-seo", "route.metadata/indexability");
-    if (!getPublicRouteById(route.id, source, data)) report("route-not-ready", "routeId");
+    if (!getPublicRouteById(route.id, source, data, fragmentExists)) report("route-not-ready", "routeId");
   }
   return Object.freeze(issues);
 }
 
-export function validateContentRegistry(source = content, routeSource = routes, evidence = proofs, data = relationshipRegistry): readonly ContentIssue[] {
+function inspectRegistry(source: readonly PageContent[], routeSource: readonly RouteDefinition[], evidence: readonly Proof[], data: RelationshipRegistry): readonly ContentIssue[] {
   const issues: ContentIssue[] = [], ids = new Set<string>(), targets = new Set<string>();
   const report = (code: ContentIssue["code"], contentId: string, field: string) => issues.push(Object.freeze({ code, contentId, field }));
-  if (validateRouteRegistry(routeSource, data).length) report("invalid-route", "registry", "routes");
+  const fragmentExists = contentFragments(source);
+  if (validateRouteRegistry(routeSource, data, fragmentExists).length) report("invalid-route", "registry", "routes");
   const evidenceIds = new Set<string>();
   for (const proof of evidence) {
     if (evidenceIds.has(proof.id)) report("duplicate-id", proof.id, "proofs");
     evidenceIds.add(proof.id);
     if (proof.routeId && !getRouteById(proof.routeId, routeSource)) report("invalid-route", proof.id, "routeId");
+    if (proof.publication.status === "published" && proof.routeId && !getPublicRouteById(proof.routeId, routeSource, data, fragmentExists)) report("unsafe-publication", proof.id, "routeId");
     const probe = routeSource[0];
     if (probe && validateRouteRegistry([{ ...probe, publication: { status: "draft" }, indexability: tbf,
       primaryCTA: tbf, parentId: null, path: "/", slug: null, entity: undefined, relatedEntities: proof.relatedEntities }], data)
@@ -160,9 +189,9 @@ export function validateContentRegistry(source = content, routeSource = routes, 
     if (ids.has(record.id)) report("duplicate-id", record.id, "id");
     if (targets.has(record.routeId)) report("duplicate-route", record.id, "routeId");
     ids.add(record.id); targets.add(record.routeId);
-    issues.push(...inspectContent(record, routeSource, evidence, data, false));
+    issues.push(...inspectContent(record, routeSource, evidence, data, false, fragmentExists));
     if (record.publication.status === "published") {
-      if (inspectContent(record, routeSource, evidence, data, true).length) report("unsafe-publication", record.id, "readiness");
+      if (inspectContent(record, routeSource, evidence, data, true, fragmentExists).length) report("unsafe-publication", record.id, "readiness");
     }
     const route = getRouteById(record.routeId, routeSource);
     if (route?.indexability.state === "approved" && route.indexability.value.index
@@ -180,23 +209,82 @@ export function validateContentRegistry(source = content, routeSource = routes, 
   return Object.freeze(issues);
 }
 
-export type ContentReadiness = Readonly<{ ready: boolean; issues: readonly ContentIssue[] }>;
-export function getContentReadiness(id: string, source = content, routeSource = routes, evidence = proofs, origin: Decision<string> = siteOrigin, data = relationshipRegistry): ContentReadiness {
-  const record = getContentById(id, source);
-  const issues = [...validateContentRegistry(source, routeSource, evidence, data)];
-  if (!record) issues.push(Object.freeze({ code: "invalid-reference", contentId: id, field: "id" }));
-  else {
-    issues.push(...inspectContent(record, routeSource, evidence, data, true));
-    const route = getRouteById(record.routeId, routeSource);
-    if (route?.indexability.state === "approved" && route.indexability.value.index) {
-      // Reuse M4.8 origin/publication policy without altering the route's actual sitemap decision.
-      const checked = routeSource.map((r) => r.id === route.id ? { ...r, indexability: { ...route.indexability, value: { index: true, follow: true, sitemap: true } } } as RouteDefinition : r);
-      if (!getSitemapRoutes(checked, origin, data).some((r) => r.id === route.id)) issues.push(Object.freeze({ code: "missing-seo", contentId: id, field: "siteOrigin" }));
+function intrinsicIssues(record: PageContent, source: readonly PageContent[], routeSource: readonly RouteDefinition[], evidence: readonly Proof[], origin: Decision<string> | undefined, data: RelationshipRegistry): readonly ContentIssue[] {
+  const fragmentExists = contentFragments(source);
+  const issues = [...inspectContent(record, routeSource, evidence, data, true, fragmentExists)];
+  const route = getRouteById(record.routeId, routeSource);
+  if (origin && route?.indexability.state === "approved" && route.indexability.value.index) {
+    // Reuse M4.8 origin/publication policy without altering the route's actual sitemap decision.
+    const checked = routeSource.map((r) => r.id === route.id ? { ...r, indexability: { ...route.indexability, value: { index: true, follow: true, sitemap: true } } } as RouteDefinition : r);
+    if (!getSitemapRoutes(checked, origin, data, fragmentExists).some((r) => r.id === route.id)) issues.push(Object.freeze({ code: "missing-seo", contentId: record.id, field: "siteOrigin" }));
+  }
+  return Object.freeze(issues);
+}
+type ContentDependency = Readonly<{ routeId: RouteId; field: string }>;
+function dependencies(record: PageContent, routeSource: readonly RouteDefinition[], evidence: readonly Proof[]): readonly ContentDependency[] {
+  const result: ContentDependency[] = [];
+  const addCTA = (cta: CTA, field: string) => {
+    if (cta.kind !== "submit-enquiry") result.push({ routeId: cta.destination.routeId, field });
+  };
+  const addProof = (id: ProofId, field: string) => {
+    const proof = evidence.find((p) => p.id === id);
+    if (proof?.routeId) result.push({ routeId: proof.routeId, field });
+  };
+  if (record.cta.state === "approved") addCTA(record.cta.value, "cta.destination");
+  record.proofIds.forEach((id) => addProof(id, "proofIds.destination"));
+  if (record.sections.state === "approved") for (const section of record.sections.value) {
+    if (section.cta) addCTA(section.cta, `sections.${section.id}.cta`);
+    section.proofIds.forEach((id) => addProof(id, `sections.${section.id}.proofIds`));
+  }
+  const parent = getRouteById(record.routeId, routeSource)?.parentId;
+  if (parent) result.push({ routeId: parent, field: "parent.content" });
+  return result;
+}
+/** Two passes: independently verify each record, then prune invalid dependency chains.
+ * Complete published cycles survive; no visit/self-link can manufacture approval. */
+function reviewRegistry(source: readonly PageContent[], routeSource: readonly RouteDefinition[], evidence: readonly Proof[], origin: Decision<string> | undefined, data: RelationshipRegistry) {
+  const issues = [...inspectRegistry(source, routeSource, evidence, data)];
+  const local = new Map(source.map((record) => [record.id, intrinsicIssues(record, source, routeSource, evidence, origin, data)]));
+  for (const record of source) if (record.publication.status === "published" && local.get(record.id)?.length
+    && !issues.some((issue) => issue.contentId === record.id && issue.code === "unsafe-publication")) {
+    issues.push(Object.freeze({ code: "unsafe-publication", contentId: record.id, field: "readiness" }));
+  }
+  const eligible = new Set(source.filter((record) => record.publication.status === "published" && !local.get(record.id)?.length).map((record) => record.routeId));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const record of source) if (eligible.has(record.routeId)
+      && dependencies(record, routeSource, evidence).some((dependency) => !eligible.has(dependency.routeId))) {
+      eligible.delete(record.routeId); changed = true;
     }
   }
+  const dependencyIssues = (record: PageContent): readonly ContentIssue[] => Object.freeze(dependencies(record, routeSource, evidence)
+    .filter((dependency) => dependency.routeId !== record.routeId && !eligible.has(dependency.routeId))
+    .map((dependency) => Object.freeze({ code: "unsafe-publication" as const, contentId: record.id, field: dependency.field })));
+  for (const record of source) if (record.publication.status === "published") issues.push(...dependencyIssues(record));
+  for (const proof of evidence) if (proof.publication.status === "published" && proof.routeId && !eligible.has(proof.routeId)) {
+    issues.push(Object.freeze({ code: "unsafe-publication", contentId: proof.id, field: "destination.content" }));
+  }
+  return { issues: Object.freeze(issues), eligible, local, dependencyIssues };
+}
+export function validateContentRegistry(source = content, routeSource = routes, evidence = proofs, data = relationshipRegistry, origin?: Decision<string>): readonly ContentIssue[] {
+  return reviewRegistry(source, routeSource, evidence, origin, data).issues;
+}
+export type ContentReadiness = Readonly<{ ready: boolean; issues: readonly ContentIssue[] }>;
+export function getContentReadiness(id: string, source = content, routeSource = routes, evidence = proofs, origin: Decision<string> = siteOrigin, data = relationshipRegistry): ContentReadiness {
+  const review = reviewRegistry(source, routeSource, evidence, origin, data);
+  const record = getContentById(id, source);
+  const issues = [...review.issues];
+  if (!record) issues.push(Object.freeze({ code: "invalid-reference", contentId: id, field: "id" }));
+  else issues.push(...(review.local.get(record.id) ?? []), ...review.dependencyIssues(record));
   return Object.freeze({ ready: issues.length === 0, issues: Object.freeze(issues) });
 }
 export function getPublicationEligibleContent(source = content, routeSource = routes, evidence = proofs, origin: Decision<string> = siteOrigin, data = relationshipRegistry): readonly PageContent[] {
-  return Object.freeze(source.filter((record) => record.publication.status === "published"
-    && getContentReadiness(record.id, source, routeSource, evidence, origin, data).ready));
+  const review = reviewRegistry(source, routeSource, evidence, origin, data);
+  return review.issues.length ? empty : Object.freeze(source.filter((record) => review.eligible.has(record.routeId)));
+}
+/** Public link boundary: route, content, selections, evidence and verified section IDs. */
+export function resolvePublicationSafeCTA(cta: CTA, source = content, routeSource = routes, evidence = proofs, origin: Decision<string> = siteOrigin, data = relationshipRegistry): ResolvedCTALink | undefined {
+  if (cta.kind === "submit-enquiry" || !getPublicationEligibleContent(source, routeSource, evidence, origin, data).some((record) => record.routeId === cta.destination.routeId)) return undefined;
+  return resolvePublicCTA(cta, routeSource, data, contentFragments(source));
 }

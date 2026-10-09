@@ -39,11 +39,14 @@ At the foundation review, the repository is a create-next-app starter on `main`,
 MVP Requirements v3.0 are approved. The historical starter snapshot above records the initial inspection only; it does not supersede the current approved business, design, and delivery baseline below.
 
 - M0 environment/setup, M1 Git/GitHub foundation, and M2 Next.js foundation are complete.
-- M3 design-system foundation is implemented and awaiting the final Step 0 checkpoint. Existing changes in `app/globals.css`, `app/layout.tsx`, and `app/page.tsx` are uncommitted and must be preserved.
-- Step 0 audit/synchronization is in progress. Do not describe the checkpoint or repository freeze as completed until verified and authorized.
+- M3 design-system foundation and the Step 0 repository checkpoint are preserved at `baf5213`. Rendered visual/accessibility QA remains outstanding; checkpoint completion does not establish production readiness.
+- M4.1–M4.9 architecture and centralized data are implemented; the committed checkpoint is `4f0cafb`. M4.10 audited that checkpoint with a PARTIAL verdict. M4.11 refines the verified publication defects; recheck validation and Git state before treating its changes as a new checkpoint.
+- The registries retain 22 service families, 11 industries, six package tiers, custom Enterprise, 53 routes and 53 content records. Current route/content records are draft and publication-ineligible; commercial/content/integration unknowns remain TBF.
 - M3 uses approved centralized brand tokens, fluid typography, spacing, responsive containers/grids, visible focus states, reduced-motion handling, and the approved system fallback font stack. Google/Geist font loading and the starter automatic dark theme are no longer the active implementation.
 - `app/layout.tsx` provides Swift Market metadata, `en-US`, light color scheme, and a skip link. `app/page.tsx` is an **internal temporary design-system preview**, not the production homepage; preserve its `noindex` until replaced by the production homepage.
 - Lint and production build previously passed. Rendered visual/accessibility QA remains outstanding; do not claim it passed from source checks alone.
+- Public M5 consumers must use `lib/data/content` publication eligibility and `resolvePublicationSafeCTA`. M4.8 route-only lookups/resolution remain architectural building blocks and do not establish content approval. Destination content, proof targets, ancestors, evidence, SEO and operational approvals must pass the shared content dependency review before public use. Verified section anchors are permitted; unverified fragments remain rejected.
+- M4.12.1 centralizes public application access through `lib/data/public-consumers`. Use its safe route/content, navigation, breadcrumb, CTA and sitemap-candidate adapters; do not import raw data modules or route-only helpers into pages, components or application utilities. The public-consumer integrity suite checks this import boundary. Internal data modules and tests retain compatibility access. No M5 UI or publication is authorized by this layer.
 
 ## Business and conversions
 

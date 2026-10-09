@@ -9,13 +9,15 @@ The MVP is consultation/enquiry/proposal-first, not ecommerce-first. It supports
 - M0 environment/setup: complete.
 - M1 Git/GitHub foundation: complete.
 - M2 Next.js foundation: complete.
-- M3 design-system foundation: implemented; final checkpoint and rendered QA remain outstanding.
+- M3 design-system foundation: preserved at the Step 0 checkpoint; rendered QA remains outstanding.
 - MVP Requirements v3.0: approved.
-- Step 0 synchronization/freeze: in progress.
+- Step 0 synchronization/freeze: checkpoint `baf5213` complete.
+- M4.1–M4.9: architecture and centralized data implemented at `4f0cafb`.
+- M4.10: read-only audit returned PARTIAL; M4.11 addresses its verified publication defects. Its changes require validation and a separately authorized checkpoint.
 - Production pages: not yet implemented.
 - Current `/`: temporary internal `noindex` design-system preview.
 
-The website is not production ready. Existing uncommitted M3 work must be preserved.
+The website is not production ready. Preserve the existing M3 foundation and approved architecture. All 53 route/content candidates remain draft and publication-ineligible; launch content, commercial and operational inputs remain TBF.
 
 ## Approved Product Baseline
 
@@ -82,9 +84,11 @@ Secrets must never use `NEXT_PUBLIC_`: those values are browser-visible and expo
 
 | Path | Current purpose |
 | --- | --- |
-| `app/` | App Router layout, global styles, temporary design-system page, and starter favicon |
+| `app/` | App Router layout, global styles, temporary design-system page, accessible not-found page, and starter favicon |
 | `public/` | Current static assets, including starter SVGs; production assets require approval |
-| `docs/` | Approved MVP requirements and reusable QA checklist |
+| `docs/` | Approved MVP requirements, M4 architecture/data/publication references, and reusable QA checklist |
+| `lib/domain/` | Shared public domain types/helpers and separately imported private enquiry contracts |
+| `lib/data/` | Canonical draft registries, publication/integrity helpers and dependency-free tests |
 | `AGENTS.md` | Engineering and agent rules |
 | `README.md` | Repository setup, conventions, and delivery overview |
 | `.env.example` | Non-secret environment documentation |
@@ -92,7 +96,21 @@ Secrets must never use `NEXT_PUBLIC_`: those values are browser-visible and expo
 | `.node-version` | Node major version convention |
 | `package.json` | Scripts, dependencies, package manager, and runtime constraint |
 
-Future component, content/data, and integration directories are architecture decisions for later milestones.
+Production components and integrations remain later milestone work.
+
+## Publication Governance (M4.11)
+
+`lib/data/content` is the public content eligibility boundary. `getContentReadiness`, `validateContentRegistry` and `getPublicationEligibleContent` share a two-pass review: independently verify content/route/evidence/SEO approvals, then remove candidates whose CTA, proof-detail or ancestor destinations lack eligible published content. The finite pruning pass allows complete published mutual links and self-links without recursive readiness calls. A self-link never grants missing approval. Approved-but-unpublished content may pass editorial readiness, but cannot resolve as a public destination.
+
+M4.12.1 provides the public application entry point `lib/data/public-consumers`; use its route/content lookups, navigation, breadcrumb, CTA and sitemap-candidate adapters. They join route eligibility to the existing eligible-content review. The CTA adapter delegates to `content.resolvePublicationSafeCTA`; route-only `navigation.resolvePublicCTA` remains internal compatibility code. A published route alone is insufficient. Verified section anchors work across all adapters; unverified fragments fail closed. Submit actions are not link results. Existing contracts contain only internal destinations, so no external URL/provider or external publication rule is introduced. See [the safe consumer contract](docs/public-consumers.md) for APIs and import-boundary enforcement.
+
+Proof destinations remain optional. When a published proof supplies an internal route reference, that route and its associated content must be eligible. Existing source, permission and factual-review requirements remain mandatory. CTA equivalence compares current semantic fields: kind, intent, label, destination/fragment, audit offer and selection context. Object property order is ignored; selection ID lists compare by membership, with duplicate/invalid IDs still rejected by integrity checks. Tracking properties do not exist in the current CTA contract and must not be invented.
+
+All current candidates remain draft. These checks do not prove business truth, legal correctness, actual enquiry delivery or rendered QA. Supply verified content/origin and operational approvals before publication. Historical M4 documents describe earlier milestones; this section and current helpers describe the M4.11 refinements.
+
+Run integrity suites with `node lib/data/services.test.mjs`, `node lib/data/industries.test.mjs`, `node lib/data/packages.test.mjs`, `node lib/data/relationships.test.mjs`, `node lib/data/routes.test.mjs` and `node lib/data/content.test.mjs`, alongside TypeScript, lint, build and whitespace checks. No test framework or package script is added.
+
+Also run `node lib/data/public-consumers.test.mjs` for M4.12.1 consumer regressions and the public application import boundary. M4 Final Re-audit and a separately authorized Git checkpoint precede the M5.1 specification and M5 development; this consumer implementation creates no public pages.
 
 ## Design System Foundation
 

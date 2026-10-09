@@ -1,6 +1,6 @@
 import type {
   CanonicalPath, CTA, Decision, RouteDefinition, RouteEntity, RouteId,
-  SelectionContext, SolutionReference,
+  SelectionContext, Slug, SolutionReference,
 } from "@/lib/domain";
 import { parseSlug } from "@/lib/domain/helpers";
 import { packages } from "@/lib/data/packages";
@@ -137,7 +137,9 @@ export function isPublicCTAContext(cta: CTA, data = relationshipRegistry): boole
   return references.every((reference) => entityPublic(reference, data));
 }
 
-export function validateRouteRegistry(source = routes, data = relationshipRegistry): readonly RouteIssue[] {
+/** Trusted content adapter supplies section existence; absent adapters reject fragments. */
+export type RouteFragmentValidator = (routeId: RouteId, fragment: Slug) => boolean;
+export function validateRouteRegistry(source = routes, data = relationshipRegistry, fragmentExists?: RouteFragmentValidator): readonly RouteIssue[] {
   const issues: RouteIssue[] = [];
   const report = (code: RouteIssue["code"], id: string) => issues.push(Object.freeze({ code, routeId: id }));
   const ids = new Set<string>(), paths = new Set<string>();
@@ -170,15 +172,15 @@ export function validateRouteRegistry(source = routes, data = relationshipRegist
       if (r.primaryCTA.state === "approved" && r.primaryCTA.value.kind !== "submit-enquiry") {
         const cta = r.primaryCTA.value, target = getRouteById(cta.destination.routeId, source);
         if (!target || !routeReady(target) || !isPublicCTAContext(cta, data)
-          || (cta.kind === "navigation" && cta.destination.fragment)) report("unsafe-publication", r.id);
+          || (cta.kind === "navigation" && cta.destination.fragment && !fragmentExists?.(cta.destination.routeId, cta.destination.fragment))) report("unsafe-publication", r.id);
       }
     }
   }
   return Object.freeze(issues);
 }
 
-export function getPublicRouteById(id: string, source = routes, data = relationshipRegistry): RouteDefinition | undefined {
-  if (validateRouteRegistry(source, data).length) return undefined;
+export function getPublicRouteById(id: string, source = routes, data = relationshipRegistry, fragmentExists?: RouteFragmentValidator): RouteDefinition | undefined {
+  if (validateRouteRegistry(source, data, fragmentExists).length) return undefined;
   const route = getRouteById(id, source);
   if (!route || !routeReady(route)) return undefined;
   let parent = route.parentId;
@@ -193,7 +195,8 @@ export function getPublicRouteById(id: string, source = routes, data = relations
 export type Breadcrumb = Readonly<{ routeId: RouteId; label: string; current: boolean; path?: CanonicalPath }>;
 export type BreadcrumbResult = Readonly<{ state: "resolved"; items: readonly Breadcrumb[] }>
   | Readonly<{ state: "invalid"; reason: "not-found" | "cycle" | "missing-parent" | "unpublished" }>;
-export function resolveBreadcrumbs(id: string, source = routes, mode: "public" | "editorial" = "public", data = relationshipRegistry): BreadcrumbResult {
+/** Route-only compatibility helper; public consumers additionally require eligible content. */
+export function resolveBreadcrumbs(id: string, source = routes, mode: "public" | "editorial" = "public", data = relationshipRegistry, fragmentExists?: RouteFragmentValidator): BreadcrumbResult {
   const chain: RouteDefinition[] = [], seen = new Set<string>();
   let current = getRouteById(id, source);
   if (!current) return Object.freeze({ state: "invalid", reason: "not-found" });
@@ -204,7 +207,7 @@ export function resolveBreadcrumbs(id: string, source = routes, mode: "public" |
     current = getRouteById(current.parentId, source);
     if (!current) return Object.freeze({ state: "invalid", reason: "missing-parent" });
   }
-  if (mode === "public" && chain.some((r) => !getPublicRouteById(r.id, source, data))) return Object.freeze({ state: "invalid", reason: "unpublished" });
+  if (mode === "public" && chain.some((r) => !getPublicRouteById(r.id, source, data, fragmentExists))) return Object.freeze({ state: "invalid", reason: "unpublished" });
   return Object.freeze({ state: "resolved", items: Object.freeze(chain.map((r, index) => Object.freeze({
     routeId: r.id, label: r.label, current: index === chain.length - 1,
     ...(index === chain.length - 1 ? {} : { path: r.path }),
@@ -212,13 +215,13 @@ export function resolveBreadcrumbs(id: string, source = routes, mode: "public" |
 }
 
 /** Eligibility only; no sitemap handler or absolute canonical URLs are emitted. */
-export function getSitemapRoutes(source = routes, origin = siteOrigin, data = relationshipRegistry): readonly RouteDefinition[] {
+export function getSitemapRoutes(source = routes, origin = siteOrigin, data = relationshipRegistry, fragmentExists?: RouteFragmentValidator): readonly RouteDefinition[] {
   if (origin.state !== "approved" || !origin.approvalReference.trim()) return empty;
   try {
     const url = new URL(origin.value);
     if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || url.pathname !== "/"
       || /^(localhost|127\.|0\.|\[::1\])/.test(url.hostname) || url.hostname.endsWith(".localhost")) return empty;
   } catch { return empty; }
-  return Object.freeze(source.filter((r) => getPublicRouteById(r.id, source, data)
+  return Object.freeze(source.filter((r) => getPublicRouteById(r.id, source, data, fragmentExists)
     && r.indexability.state === "approved" && r.indexability.value.index && r.indexability.value.sitemap));
 }
